@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>NAITE 채널 운영 대시보드</title>
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>NAITE 채널 운영 대시보드</h1>
+      <div class="meta" id="updated-at">마지막 갱신: -</div>
+    </div>
+    <div class="top-actions">
+      <button class="icon-btn" id="theme-toggle">🌓 테마</button>
+      <button class="icon-btn" id="refresh-btn">↻ 새로고침</button>
+    </div>
+  </header>
+
+  <div class="banner" id="sample-banner" style="display:none;">
+    현재 <b>샘플 데이터</b>로 미리보기 중입니다. <code>assets/config.js</code>의 <code>CSV_URLS</code>에
+    Google 스프레드시트 "웹에 게시" CSV 링크를 넣으면 실제 데이터로 자동 전환됩니다.
+  </div>
+
+  <section id="urgency-section">
+    <h2 class="section-title">🚨 지금 준비해야 할 채널 · <span id="urgency-count"></span></h2>
+    <div id="urgency-list"></div>
+  </section>
+
+  <section>
+    <h2 class="section-title">주간 발행 루틴 · <span id="routine-week-label"></span></h2>
+    <div class="routine-row" id="routine-row"></div>
+  </section>
+
+  <section>
+    <h2 class="section-title">애드센스 승인 현황</h2>
+    <div class="highlight-card" id="highlight-card"></div>
+  </section>
+
+  <section>
+    <h2 class="section-title">그룹별 요약 (최근 7일)</h2>
+    <div class="group-grid" id="group-grid"></div>
+    <div id="upcoming-wrap" style="margin-top:10px;"></div>
+  </section>
+
+  <section>
+    <h2 class="section-title">채널별 추이</h2>
+    <div class="chart-controls">
+      <div class="seg" id="group-tabs"></div>
+      <div class="seg" id="period-seg">
+        <button data-period="week" class="active">주간</button>
+        <button data-period="month">월간</button>
+      </div>
+    </div>
+    <div class="chart-card">
+      <canvas id="trend-chart" height="260"></canvas>
+      <div id="chart-empty" style="display:none;color:var(--text-muted);font-size:13px;padding:20px 0;text-align:center;">
+        표시할 데이터가 없습니다.
+      </div>
+      <div class="legend-row" id="chart-legend"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title">
+      원본 데이터
+      <button class="table-toggle" id="table-toggle">표로 보기</button>
+    </h2>
+    <div id="table-wrap" style="display:none; overflow-x:auto;">
+      <table class="data-table" id="data-table"></table>
+    </div>
+  </section>
+
+  <footer class="foot">NAITE · 정적 대시보드 · GitHub Pages</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/sample-data.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/dashboard.js"></script>
+</body>
+</html>

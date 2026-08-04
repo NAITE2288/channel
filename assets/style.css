@@ -1,0 +1,308 @@
+:root {
+  color-scheme: light;
+  --surface-1: #fcfcfb;
+  --surface-2: #f9f9f7;
+  --card-border: rgba(11, 11, 11, 0.10);
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --gridline: #e1e0d9;
+  --baseline: #c3c2b7;
+
+  --series-1: #2a78d6; /* blue   - 강사·전문 */
+  --series-2: #eb6834; /* orange - 재테크 */
+  --series-3: #1baf7a; /* aqua   - 도서리뷰 */
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #4a3aa7;
+  --series-8: #e34948;
+
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1: #1a1a19;
+  --surface-2: #0d0d0d;
+  --card-border: rgba(255, 255, 255, 0.10);
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #898781;
+  --gridline: #2c2c2a;
+  --baseline: #383835;
+
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --surface-2: #0d0d0d;
+    --card-border: rgba(255, 255, 255, 0.10);
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --gridline: #2c2c2a;
+    --baseline: #383835;
+
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 16px 16px 48px;
+}
+
+header.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+header.top h1 {
+  font-size: 20px;
+  margin: 0;
+}
+header.top .meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.top-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+button.icon-btn {
+  background: var(--surface-1);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+button.icon-btn:hover { background: var(--surface-2); }
+
+.banner {
+  background: var(--surface-1);
+  border: 1px solid var(--card-border);
+  border-left: 4px solid var(--status-warning);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+section { margin-bottom: 28px; }
+
+h2.section-title {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+}
+
+/* Routine checklist */
+.routine-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.routine-card {
+  background: var(--surface-1);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 12px 8px;
+  text-align: center;
+}
+.routine-card .day { font-size: 12px; color: var(--text-muted); }
+.routine-card .ch { font-size: 13px; font-weight: 600; margin: 4px 0 8px; }
+.routine-check {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  margin: 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  border: 2px solid var(--baseline);
+  color: var(--text-muted);
+}
+.routine-check.done {
+  background: var(--status-good);
+  border-color: var(--status-good);
+  color: #fff;
+}
+.routine-check.pending {
+  background: transparent;
+}
+
+/* Highlight badge (adsense approval) */
+.highlight-card {
+  background: var(--surface-1);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.highlight-card .icon {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.highlight-card .title { font-size: 13px; color: var(--text-muted); }
+.highlight-card .name { font-size: 16px; font-weight: 700; margin: 2px 0; }
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+.highlight-card .goal {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* Reserve urgency (D-day) */
+#urgency-section .section-title { color: var(--text-secondary); }
+#urgency-count { color: var(--status-critical); font-weight: 700; text-transform: none; letter-spacing: normal; }
+.urgency-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-1);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.urgency-row.is-critical {
+  border-color: var(--status-critical);
+  background: color-mix(in srgb, var(--status-critical) 8%, var(--surface-1));
+}
+.urgency-row .u-name { font-weight: 700; font-size: 14px; }
+.urgency-row .u-group { font-size: 12px; color: var(--text-muted); background: var(--surface-2); padding: 2px 8px; border-radius: 999px; }
+.urgency-row .u-deadline { margin-left: auto; font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+/* Group cards */
+.group-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.group-card {
+  background: var(--surface-1);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 14px;
+  border-top: 3px solid var(--series-1);
+}
+.group-card .gname { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+.group-card .stat-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); padding: 3px 0; }
+.group-card .stat-row b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+
+/* Charts */
+.chart-controls {
+  display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+  align-items: center;
+}
+.seg {
+  display: inline-flex; background: var(--surface-1); border: 1px solid var(--card-border);
+  border-radius: 8px; overflow: hidden;
+}
+.seg button {
+  border: none; background: transparent; color: var(--text-secondary);
+  padding: 6px 12px; font-size: 12px; cursor: pointer;
+}
+.seg button.active { background: var(--series-1); color: #fff; }
+.chart-card {
+  background: var(--surface-1);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 14px;
+}
+.legend-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; font-size: 12px; color: var(--text-secondary); }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
+canvas { max-width: 100%; }
+
+/* Table view */
+.table-toggle { font-size: 12px; color: var(--text-secondary); background: none; border: none; text-decoration: underline; cursor: pointer; padding: 0; }
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 10px;
+}
+table.data-table th, table.data-table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--gridline);
+  font-variant-numeric: tabular-nums;
+}
+table.data-table th { color: var(--text-muted); font-weight: 600; }
+
+footer.foot {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-top: 20px;
+}
+
+@media (max-width: 720px) {
+  .routine-row { grid-template-columns: repeat(5, minmax(56px, 1fr)); overflow-x: auto; }
+  .group-grid { grid-template-columns: 1fr; }
+  .highlight-card .goal { margin-left: 0; text-align: left; }
+}
