@@ -33,6 +33,7 @@ function generateSampleDaily() {
       const row = {
         날짜: dateStr,
         채널: ch.name,
+        상태: "발행완료",
         게시글수: posts,
         조회수: views,
         애드센스수익: "",

@@ -294,17 +294,21 @@ function renderTable() {
   const table = document.getElementById("data-table");
   table.innerHTML = `
     <thead><tr>
-      <th>날짜</th><th>채널</th><th>게시글수</th><th>조회수</th><th>애드센스수익</th><th>승인상태</th><th>비고</th>
+      <th>날짜</th><th>채널</th><th>상태</th><th>게시글수</th><th>조회수</th><th>애드센스수익</th><th>승인상태</th><th>비고</th>
     </tr></thead>
     <tbody>
       ${rows
-        .map(
-          (r) => `<tr>
-            <td>${r.date}</td><td>${r.channel}</td><td>${r.posts}</td><td>${fmtNum(r.views)}</td>
+        .map((r) => {
+          const ds = DRAFT_STATUS_STYLE[r.status];
+          const statusCell = ds
+            ? `<span class="status-badge" style="background:var(--status-${ds.role})">${ds.label}</span>`
+            : r.status || "-";
+          return `<tr>
+            <td>${r.date}</td><td>${r.channel}</td><td>${statusCell}</td><td>${r.posts}</td><td>${fmtNum(r.views)}</td>
             <td>${r.adsenseRevenue ? fmtWon(r.adsenseRevenue) : "-"}</td>
             <td>${r.adsenseStatus || "-"}</td><td>${r.note || "-"}</td>
-          </tr>`
-        )
+          </tr>`;
+        })
         .join("")}
     </tbody>
   `;

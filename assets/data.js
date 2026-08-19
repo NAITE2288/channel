@@ -152,6 +152,7 @@ function normalizeDaily(rows) {
     .map((r) => ({
       date: (r["날짜"] || "").trim(),
       channel: (r["채널"] || "").trim(),
+      status: (r["상태"] || "").trim(),
       posts: toNumber(r["게시글수"]),
       views: toNumber(r["조회수"] ?? r["조회수/방문자수"]),
       adsenseRevenue: r["애드센스수익"] === "" || r["애드센스수익"] == null ? null : toNumber(r["애드센스수익"]),

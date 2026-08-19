@@ -49,6 +49,12 @@ const ADSENSE_STATUS_STYLE = {
   "반려": { role: "critical", label: "반려", icon: "✕" },
 };
 
+// 일별데이터.상태 (초안 작성 로그 폼에서 자동 전송) → 배지 색상
+const DRAFT_STATUS_STYLE = {
+  "초안대기": { role: "warning", label: "초안대기" },
+  "발행완료": { role: "good", label: "발행완료" },
+};
+
 // 주간 발행 루틴: 요일 → 담당 채널 ID
 const ROUTINE_SCHEDULE = [
   { day: "월", channelId: 4 },
