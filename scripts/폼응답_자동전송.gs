@@ -30,12 +30,28 @@ const Q_CHANNEL = "채널";
 const Q_STATUS = "상태";
 const Q_NOTE = "비고";
 
+// 폼 드롭다운은 사람이 알아보기 쉬운 라벨(핸들 포함)을 쓰고,
+// 여기서 채널마스터 탭의 정식 채널명으로 변환해줍니다.
+// 폼의 "채널" 옵션을 바꾸면 이 매핑도 함께 수정하세요.
+const CHANNEL_MAP = {
+  "네이버1(actor0204)": "네이버①",
+  "네이버2(actor2288)": "네이버②",
+  "티스토리(naite_growth)": "티스토리③",
+  "티스토리(dalnim2288)": "티스토리④",
+  "쓰레드": "스레드⑤",
+  "인스타": "인스타⑥ (@naite.46)",
+  "카카오채널": "카카오⑦",
+  "크몽": "크몽⑧",
+  "리틀리": "리틀리⑨",
+};
+
 function onFormSubmitToDaily(e) {
   try {
     const responses = e.namedValues; // { "질문제목": ["답변"] } 형태
 
     const rawDate = getAnswer(responses, Q_DATE);
-    const channel = getAnswer(responses, Q_CHANNEL);
+    const rawChannel = getAnswer(responses, Q_CHANNEL);
+    const channel = CHANNEL_MAP[rawChannel] || rawChannel; // 매핑에 없으면 원본 그대로(수동 확인 필요)
     const status = getAnswer(responses, Q_STATUS);
     const note = getAnswer(responses, Q_NOTE);
 
