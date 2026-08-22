@@ -6,7 +6,8 @@
 
 function generateSampleDaily() {
   const channels = CHANNEL_META_FALLBACK.filter((c) => c.status === "운영중");
-  const today = new Date("2026-08-04");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const rows = [];
   let seed = 42;
   const rand = () => {
@@ -39,6 +40,7 @@ function generateSampleDaily() {
         애드센스수익: "",
         애드센스승인상태: "",
         비고: "",
+        예약발행일: "",
       };
 
       if (ch.id === 4) {
@@ -51,11 +53,35 @@ function generateSampleDaily() {
       rows.push(row);
     });
   }
+
+  // 예약발행 큐 샘플: 채널③④는 1일1포스팅 예약발행, 나머지 일부 채널도 예약 큐를 조금 보유
+  const reserveDepth = { 2: 1, 3: 2, 4: 12, 5: 0, 7: 0, 8: 5, 9: 3 };
+  Object.entries(reserveDepth).forEach(([id, count]) => {
+    const ch = channels.find((c) => c.id === Number(id));
+    if (!ch) return;
+    for (let i = 1; i <= count; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() + i);
+      rows.push({
+        날짜: today.toISOString().slice(0, 10),
+        채널: ch.name,
+        상태: "예약발행완료",
+        게시글수: "",
+        조회수: "",
+        애드센스수익: "",
+        애드센스승인상태: "",
+        비고: "",
+        예약발행일: d.toISOString().slice(0, 10),
+      });
+    }
+  });
+
   return rows;
 }
 
 function generateSampleRoutine() {
-  const today = new Date("2026-08-04");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const rows = [];
   for (let w = 3; w >= 0; w--) {
     const monday = new Date(today);
@@ -63,15 +89,14 @@ function generateSampleRoutine() {
     const diffToMonday = (day + 6) % 7;
     monday.setDate(monday.getDate() - diffToMonday - w * 7);
     const weekStr = monday.toISOString().slice(0, 10);
-    rows.push({
-      주차시작일: weekStr,
-      "월(④)": w === 0 ? "TRUE" : "TRUE",
-      "화(③)": w === 0 ? "FALSE" : "TRUE",
-      "수(②)": w === 0 ? "TRUE" : "TRUE",
-      "목(④)": w === 0 ? "FALSE" : "TRUE",
-      "금(①)": w === 0 ? "FALSE" : "TRUE",
-      비고: "",
+    const done = w !== 0; // 이번 주(w=0)만 일부 미완료로 표시
+    const row = { 주차시작일: weekStr, 비고: "" };
+    ROUTINE_ASSIGNED.forEach((s) => {
+      routineDayChannelIds(s.day).forEach((channelId) => {
+        row[routineHeaderFor(s.day, channelId)] = done ? "TRUE" : (channelId === 4 || channelId === 1 ? "FALSE" : "TRUE");
+      });
     });
+    rows.push(row);
   }
   return rows;
 }
@@ -84,5 +109,4 @@ const SAMPLE_MASTER = CHANNEL_META_FALLBACK.map((c) => ({
   그룹: c.group,
   역할설명: c.role,
   상태: c.status,
-  예약발행마감일: c.reserveDeadline,
 }));

@@ -100,9 +100,9 @@ async function loadAllData() {
       loadGvizSheet(SHEET_GIDS.routine),
       loadGvizSheet(SHEET_GIDS.master),
     ]);
-    const dailyRaw = gvizToRows(dailyJson, new Set(["날짜"]));
+    const dailyRaw = gvizToRows(dailyJson, new Set(["날짜", "예약발행일"]));
     const routineRaw = gvizToRows(routineJson, new Set(["주차시작일"]));
-    const masterRaw = gvizToRows(masterJson, new Set(["예약발행마감일"]));
+    const masterRaw = gvizToRows(masterJson, new Set());
 
     return {
       daily: normalizeDaily(dailyRaw),
@@ -138,7 +138,6 @@ function normalizeMaster(rows) {
       group: (r["그룹"] || "").trim(),
       role: (r["역할설명"] || "").trim(),
       status: (r["상태"] || "운영중").trim(),
-      reserveDeadline: (r["예약발행마감일"] || "").trim(),
     }))
     .filter((c) => c.id && c.name);
 
@@ -158,19 +157,23 @@ function normalizeDaily(rows) {
       adsenseRevenue: r["애드센스수익"] === "" || r["애드센스수익"] == null ? null : toNumber(r["애드센스수익"]),
       adsenseStatus: (r["애드센스승인상태"] || "").trim(),
       note: (r["비고"] || "").trim(),
+      reserveDate: (r["예약발행일"] || "").trim(),
     }))
     .filter((r) => r.date && r.channel);
 }
 
 function normalizeRoutine(rows) {
-  const truthy = (v) => String(v).trim().toUpperCase() === "TRUE" || String(v).trim() === "1" || String(v).trim() === "✔" || String(v).trim() === "TRUE";
+  const truthy = (v) => String(v).trim().toUpperCase() === "TRUE" || String(v).trim() === "1" || String(v).trim() === "✔";
+  const days = ROUTINE_ASSIGNED.map((s) => s.day);
   return rows
     .map((r) => ({
       weekStart: (r["주차시작일"] || "").trim(),
-      checks: ROUTINE_SCHEDULE.map((s) => {
-        const key = Object.keys(r).find((k) => k.startsWith(s.day));
-        return { day: s.day, channelId: s.channelId, done: key ? truthy(r[key]) : false };
-      }),
+      checks: days.flatMap((day) =>
+        routineDayChannelIds(day).map((channelId) => {
+          const header = routineHeaderFor(day, channelId);
+          return { day, channelId, done: truthy(r[header]) };
+        })
+      ),
       note: (r["비고"] || "").trim(),
     }))
     .filter((r) => r.weekStart)
@@ -217,26 +220,27 @@ function latestNonEmpty(daily, channelName, field) {
   return "";
 }
 
-// 오늘(로컬 자정) 기준 남은 일수. 날짜 미설정이면 null.
-function daysUntil(dateStr) {
-  if (!dateStr) return null;
-  const target = new Date(dateStr + "T00:00:00");
-  if (Number.isNaN(target.getTime())) return null;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return Math.round((target - today) / 86400000);
+function todayStr() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString().slice(0, 10);
 }
 
-// 운영중 채널을 "남은 예약일수 적은 순"으로 정렬 (미설정/마감 경과가 최우선)
-function buildReserveUrgencyList(master) {
+// 채널별로 "오늘 이후로 예약발행 대기 중인 포스팅" 개수와 마지막 예약일을 일별데이터에서 직접 집계.
+// (일별데이터.상태 === RESERVE_QUEUE_STATUS 이고 예약발행일이 오늘 이후인 행 = 아직 안 나간 예약)
+function buildReserveQueueList(daily, master) {
+  const today = todayStr();
   return master.list
-    .filter((c) => c.status === "운영중")
-    .map((c) => ({ ...c, daysLeft: daysUntil(c.reserveDeadline) }))
-    .sort((a, b) => {
-      const av = a.daysLeft === null ? -Infinity : a.daysLeft;
-      const bv = b.daysLeft === null ? -Infinity : b.daysLeft;
-      return av - bv;
-    });
+    .filter((c) => c.status === "운영중" && !RESERVE_QUEUE_EXCLUDED_IDS.includes(c.id))
+    .map((c) => {
+      const pending = daily.filter(
+        (r) => r.channel === c.name && r.status === RESERVE_QUEUE_STATUS && r.reserveDate && r.reserveDate >= today
+      );
+      const count = pending.length;
+      const lastDate = pending.reduce((max, r) => (!max || r.reserveDate > max ? r.reserveDate : max), null);
+      return { ...c, count, lastDate };
+    })
+    .sort((a, b) => a.count - b.count);
 }
 
 function groupSummary(daily, master, groupName, sinceDays = 7) {

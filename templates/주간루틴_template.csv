@@ -1,2 +1,2 @@
-주차시작일,월(④),화(③),수(②),목(④),금(①),비고
-2026-08-03,TRUE,FALSE,TRUE,FALSE,FALSE,
+주차시작일,월(③),월(④),화(③),화(④),수(②),수(③),수(④),목(③),목(④),금(①),금(③),금(④),비고
+2026-08-03,TRUE,TRUE,TRUE,FALSE,TRUE,TRUE,TRUE,TRUE,FALSE,FALSE,TRUE,TRUE,

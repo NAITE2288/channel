@@ -65,10 +65,10 @@ function toggleTheme() {
   renderChart(); // re-read CSS vars for canvas colors
 }
 
-// ---------- 0. 예약 소진 추적 (남은 일수 적은 순, 최상단) ----------
+// ---------- 0. 예약발행 큐 추적 (오늘 이후 예약 개수 적은 순, 최상단) ----------
 function renderReserveUrgency() {
   const section = document.getElementById("urgency-section");
-  const list = buildReserveUrgencyList(STATE.master);
+  const list = buildReserveQueueList(STATE.daily, STATE.master);
   const wrap = document.getElementById("urgency-list");
   wrap.innerHTML = "";
 
@@ -78,22 +78,20 @@ function renderReserveUrgency() {
   }
   section.style.display = "block";
 
-  const urgentCount = list.filter(
-    (c) => c.daysLeft === null || c.daysLeft <= RESERVE_URGENT_THRESHOLD_DAYS
-  ).length;
+  const urgentCount = list.filter((c) => c.count <= RESERVE_URGENT_THRESHOLD_COUNT).length;
   document.getElementById("urgency-count").textContent = urgentCount
     ? `${urgentCount}개 채널 지금 확인 필요`
     : "모든 채널 예약 여유 있음";
 
   list.forEach((c) => {
-    const style = reserveUrgencyStyle(c.daysLeft);
+    const style = reserveQueueStyle(c.count);
     const row = document.createElement("div");
     row.className = "urgency-row" + (style.role === "critical" ? " is-critical" : "");
     row.innerHTML = `
       <span class="status-badge" style="background:var(--status-${style.role})">${style.label}</span>
       <span class="u-name">${c.name}</span>
       <span class="u-group">${c.group}</span>
-      <span class="u-deadline">${c.reserveDeadline ? "마감 " + c.reserveDeadline : "예약 없음"}</span>
+      <span class="u-deadline">${c.lastDate ? "마지막 예약일 " + c.lastDate : "예약 없음"}</span>
     `;
     wrap.appendChild(row);
   });
@@ -104,18 +102,25 @@ function renderRoutine() {
   const week = latestRoutineWeek(STATE.routine);
   const row = document.getElementById("routine-row");
   row.innerHTML = "";
-  ROUTINE_SCHEDULE.forEach((sched) => {
-    const ch = STATE.master.byId.get(sched.channelId);
-    const checkInfo = week ? week.checks.find((c) => c.channelId === sched.channelId) : null;
-    const done = checkInfo ? checkInfo.done : false;
+  ROUTINE_ASSIGNED.forEach((sched) => {
+    const channelIds = routineDayChannelIds(sched.day);
+    const items = channelIds
+      .map((channelId) => {
+        const ch = STATE.master.byId.get(channelId);
+        const checkInfo = week ? week.checks.find((c) => c.day === sched.day && c.channelId === channelId) : null;
+        const done = checkInfo ? checkInfo.done : false;
+        return `
+          <div class="routine-item">
+            <span class="ch">${ch ? ch.name : "채널" + channelId}</span>
+            <span class="routine-check ${done ? "done" : "pending"}">${done ? "✓" : ""}</span>
+          </div>
+        `;
+      })
+      .join("");
 
     const card = document.createElement("div");
     card.className = "routine-card";
-    card.innerHTML = `
-      <div class="day">${sched.day}요일</div>
-      <div class="ch">${ch ? ch.name : "채널" + sched.channelId}</div>
-      <div class="routine-check ${done ? "done" : "pending"}">${done ? "✓" : ""}</div>
-    `;
+    card.innerHTML = `<div class="day">${sched.day}요일</div>${items}`;
     row.appendChild(card);
   });
   document.getElementById("routine-week-label").textContent = week

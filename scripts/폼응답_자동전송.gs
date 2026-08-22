@@ -16,8 +16,13 @@
  *    `일별데이터` 탭에 행이 잘 추가되는지 확인하세요.
  *
  * 주의: 일별데이터 탭 컬럼 순서는 반드시
- * 날짜, 채널, 상태, 게시글수, 조회수, 애드센스수익, 애드센스승인상태, 비고
- * 순이어야 합니다 (C열에 "상태" 컬럼이 삽입되어 있어야 함).
+ * 날짜, 채널, 상태, 게시글수, 조회수, 애드센스수익, 애드센스승인상태, 비고, 예약발행일
+ * 순이어야 합니다 (C열에 "상태" 컬럼, I열에 "예약발행일" 컬럼이 있어야 함).
+ *
+ * "예약발행일" 사용법: 채널③④처럼 1일1포스팅으로 예약발행을 걸어두는 채널은,
+ * 포스팅 하나를 예약 큐에 올릴 때마다 폼에 상태="예약발행완료" + 그 포스팅이
+ * 실제로 발행되는 날짜를 "예약발행일"에 입력하세요. 대시보드가 오늘 이후로
+ * 예약된 개수를 자동으로 세어 "지금 준비해야 할 채널"에 보여줍니다.
  */
 
 // 대시보드가 읽는 대상 스프레드시트 ID (config.js의 SHEET_ID와 동일)
@@ -29,6 +34,7 @@ const Q_DATE = "날짜";
 const Q_CHANNEL = "채널";
 const Q_STATUS = "상태";
 const Q_NOTE = "비고";
+const Q_RESERVE_DATE = "예약발행일";
 
 // 폼 드롭다운은 사람이 알아보기 쉬운 라벨(핸들 포함)을 쓰고,
 // 여기서 채널마스터 탭의 정식 채널명으로 변환해줍니다.
@@ -54,6 +60,8 @@ function onFormSubmitToDaily(e) {
     const channel = CHANNEL_MAP[rawChannel] || rawChannel; // 매핑에 없으면 원본 그대로(수동 확인 필요)
     const status = getAnswer(responses, Q_STATUS);
     const note = getAnswer(responses, Q_NOTE);
+    const rawReserveDate = getAnswer(responses, Q_RESERVE_DATE);
+    const reserveDate = formatDate(rawReserveDate);
 
     const dateStr = formatDate(rawDate);
 
@@ -62,16 +70,17 @@ function onFormSubmitToDaily(e) {
       throw new Error(`'${TARGET_TAB_NAME}' 탭을 대상 스프레드시트에서 찾을 수 없습니다.`);
     }
 
-    // 일별데이터 탭 컬럼 순서: 날짜, 채널, 상태, 게시글수, 조회수, 애드센스수익, 애드센스승인상태, 비고
+    // 일별데이터 탭 컬럼 순서: 날짜, 채널, 상태, 게시글수, 조회수, 애드센스수익, 애드센스승인상태, 비고, 예약발행일
     targetSheet.appendRow([
       dateStr,
       channel,
       status,
-      1,     // 게시글수: 초안 1건 고정
+      status === "예약발행완료" ? "" : 1, // 게시글수: 초안/발행 로그는 1건 고정, 예약 로그는 집계 이중 방지를 위해 비움
       "",    // 조회수: 수동 입력 영역이라 비워둠
       "",    // 애드센스수익: 수동 입력 영역이라 비워둠
       "",    // 애드센스승인상태: 수동 입력 영역이라 비워둠
       note,  // 비고: 관리자 편집 링크 등
+      reserveDate, // 예약발행일: 상태가 "예약발행완료"일 때만 의미 있음
     ]);
   } catch (err) {
     // 실패하더라도 폼 응답 자체는 이미 저장되어 있으므로, 에러 로그만 남깁니다.
@@ -108,6 +117,20 @@ function testRun() {
       "채널": ["티스토리③"],
       "상태": ["초안대기"],
       "비고": ["https://naite-growth.tistory.com/manage/post/999"],
+    },
+  };
+  onFormSubmitToDaily(fakeEvent);
+}
+
+// 예약발행 로그 테스트용
+function testRunReserve() {
+  const fakeEvent = {
+    namedValues: {
+      "날짜": ["08/19/2026"],
+      "채널": ["티스토리(dalnim2288)"],
+      "상태": ["예약발행완료"],
+      "비고": [""],
+      "예약발행일": ["08/25/2026"],
     },
   };
   onFormSubmitToDaily(fakeEvent);

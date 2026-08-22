@@ -17,17 +17,16 @@ const SHEET_GIDS = {
 
 // 채널마스터 탭이 아직 게시되지 않았을 때 쓰는 기본값(폴백).
 // 실제 시트의 "채널마스터" 탭 내용과 동일하게 유지하세요.
-// reserveDeadline: 예약발행마감일(YYYY-MM-DD). 예약 포스팅을 올릴 때마다 이 값을 갱신하세요.
 const CHANNEL_META_FALLBACK = [
-  { id: 1, name: "네이버①", group: "강사·전문", role: "강사 브랜딩", status: "운영중", reserveDeadline: "2026-08-10" },
-  { id: 2, name: "네이버②", group: "도서리뷰", role: "도서 수수료", status: "운영중", reserveDeadline: "2026-08-05" },
-  { id: 3, name: "티스토리③", group: "재테크", role: "애드센스 승인대기", status: "운영중", reserveDeadline: "2026-08-06" },
-  { id: 4, name: "티스토리④", group: "강사·전문", role: "애드센스 승인완료·핵심수익", status: "운영중", reserveDeadline: "2026-08-20" },
-  { id: 5, name: "스레드⑤", group: "재테크", role: "매일 자동운영", status: "운영중", reserveDeadline: "2026-08-04" },
-  { id: 6, name: "인스타⑥ (@naite.46)", group: "브랜딩", role: "미시작 · 릴스 업로드 시작 예정 (목표 주 1~2개)", status: "미시작", reserveDeadline: "" },
-  { id: 7, name: "카카오⑦", group: "강사·전문", role: "소식지", status: "운영중", reserveDeadline: "" },
-  { id: 8, name: "크몽⑧", group: "강사·전문", role: "전자책+첨삭", status: "운영중", reserveDeadline: "2026-08-09" },
-  { id: 9, name: "리틀리⑨", group: "강사·전문", role: "전자책", status: "운영중", reserveDeadline: "2026-08-07" },
+  { id: 1, name: "네이버①", group: "강사·전문", role: "강사 브랜딩", status: "운영중" },
+  { id: 2, name: "네이버②", group: "도서리뷰", role: "도서 수수료", status: "운영중" },
+  { id: 3, name: "티스토리③", group: "재테크", role: "애드센스 승인대기", status: "운영중" },
+  { id: 4, name: "티스토리④", group: "강사·전문", role: "애드센스 승인완료·핵심수익", status: "운영중" },
+  { id: 5, name: "스레드⑤", group: "재테크", role: "매일 자동운영", status: "운영중" },
+  { id: 6, name: "인스타⑥ (@naite.46)", group: "브랜딩", role: "미시작 · 릴스 업로드 시작 예정 (목표 주 1~2개)", status: "미시작" },
+  { id: 7, name: "카카오⑦", group: "강사·전문", role: "소식지", status: "운영중" },
+  { id: 8, name: "크몽⑧", group: "강사·전문", role: "전자책+첨삭", status: "운영중" },
+  { id: 9, name: "리틀리⑨", group: "강사·전문", role: "전자책", status: "운영중" },
 ];
 
 // 그룹 표시 순서 + 팔레트 슬롯(카테고리 컬러 고정 순서: 1=blue, 2=orange, 3=aqua)
@@ -52,11 +51,18 @@ const ADSENSE_STATUS_STYLE = {
 // 일별데이터.상태 (초안 작성 로그 폼에서 자동 전송) → 배지 색상
 const DRAFT_STATUS_STYLE = {
   "초안대기": { role: "warning", label: "초안대기" },
+  "예약발행완료": { role: "good", label: "예약발행완료" },
   "발행완료": { role: "good", label: "발행완료" },
 };
 
-// 주간 발행 루틴: 요일 → 담당 채널 ID
-const ROUTINE_SCHEDULE = [
+// 예약발행 큐를 추적하는 상태값 (폼 "상태" 드롭다운의 값과 정확히 일치해야 함)
+const RESERVE_QUEUE_STATUS = "예약발행완료";
+
+// 주간 발행 루틴
+// dailyAlways: 요일 상관없이 매일 체크가 필요한 채널(1일1포스팅 예약발행 등)
+// assigned: 요일별로 추가로 담당하는 채널 (dailyAlways와 겹치면 중복 표시 안 함)
+const ROUTINE_DAILY_ALWAYS = [3, 4];
+const ROUTINE_ASSIGNED = [
   { day: "월", channelId: 4 },
   { day: "화", channelId: 3 },
   { day: "수", channelId: 2 },
@@ -64,19 +70,33 @@ const ROUTINE_SCHEDULE = [
   { day: "금", channelId: 1 },
 ];
 
+// 채널ID → 원문자 숫자 (시트 컬럼 헤더 "요일(숫자)" 조합에 사용)
+const CHANNEL_NUMERAL = { 1: "①", 2: "②", 3: "③", 4: "④", 5: "⑤", 6: "⑥", 7: "⑦", 8: "⑧", 9: "⑨" };
+
+function routineDayChannelIds(day) {
+  const assigned = ROUTINE_ASSIGNED.find((d) => d.day === day)?.channelId;
+  const ids = [...ROUTINE_DAILY_ALWAYS];
+  if (assigned && !ids.includes(assigned)) ids.unshift(assigned);
+  return ids;
+}
+
+function routineHeaderFor(day, channelId) {
+  return `${day}(${CHANNEL_NUMERAL[channelId]})`;
+}
+
 // 특별히 강조할 채널(애드센스 승인 단기 목표)
 const HIGHLIGHT_CHANNEL_ID = 3;
 
-// 예약 소진(D-day) 경고 기준. 남은 일수가 이 값 이하 또는 마감일 미설정/경과 시 빨간 경고 배지.
-const RESERVE_URGENT_THRESHOLD_DAYS = 3;
-const RESERVE_WARNING_THRESHOLD_DAYS = 7;
+// 예약발행 큐 추적에서 제외할 채널 ID (해당 채널은 1일1포스팅 예약발행 방식을 쓰지 않음)
+const RESERVE_QUEUE_EXCLUDED_IDS = [1];
 
-function reserveUrgencyStyle(daysLeft) {
-  if (daysLeft === null || daysLeft <= RESERVE_URGENT_THRESHOLD_DAYS) {
-    return { role: "critical", label: daysLeft === null ? "마감일 미설정" : daysLeft < 0 ? `D+${-daysLeft} 지연` : `D-${daysLeft}` };
-  }
-  if (daysLeft <= RESERVE_WARNING_THRESHOLD_DAYS) {
-    return { role: "warning", label: `D-${daysLeft}` };
-  }
-  return { role: "good", label: `D-${daysLeft}` };
+// 예약 큐 경고 기준: 오늘 이후로 예약된 포스팅 개수가 이 값 이하면 경고 배지
+const RESERVE_URGENT_THRESHOLD_COUNT = 3;
+const RESERVE_WARNING_THRESHOLD_COUNT = 7;
+
+function reserveQueueStyle(count) {
+  const label = `${count}개`;
+  if (count <= RESERVE_URGENT_THRESHOLD_COUNT) return { role: "critical", label };
+  if (count <= RESERVE_WARNING_THRESHOLD_COUNT) return { role: "warning", label };
+  return { role: "good", label };
 }
